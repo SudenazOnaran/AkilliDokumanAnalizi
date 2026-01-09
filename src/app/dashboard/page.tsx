@@ -1,15 +1,19 @@
-import { Suspense } from 'react';
-import DocumentView from '@/components/document-view';
-import { documents } from '@/lib/data';
-import { FileSearch } from 'lucide-react';
+import { Suspense } from "react";
+import DocumentView from "@/components/document-view";
+import { getDocumentById } from "@/app/actions/documents";
+import { FileSearch } from "lucide-react";
 
-export default function DashboardPage({
+export default async function DashboardPage({
   searchParams,
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
   const docId = searchParams?.doc as string;
-  const selectedDocument = documents.find((doc) => doc.id === docId);
+
+  let selectedDocument = null;
+  if (docId) {
+    selectedDocument = await getDocumentById(docId);
+  }
 
   return (
     <Suspense fallback={<Loading />}>

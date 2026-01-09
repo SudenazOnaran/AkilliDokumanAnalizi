@@ -1,5 +1,5 @@
-import AuthForm from '@/components/auth-form';
-import Logo from '@/components/logo';
+import AuthForm from "@/components/auth-form";
+import Logo from "@/components/logo";
 
 export default function LoginPage() {
   return (
@@ -14,9 +14,7 @@ export default function LoginPage() {
         </p>
       </div>
       <AuthForm className="mt-8 w-full max-w-sm" />
-      <p className="mt-8 text-center text-xs text-muted-foreground">
-        Bu bir öğrenci projesidir. Gerçek bir authentication akışı yoktur.
-      </p>
+      <p className="mt-8 text-center text-xs text-muted-foreground"></p>
     </main>
   );
 }

@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 /**
  * @fileOverview This file defines a Genkit flow for reporting AI errors.
@@ -8,31 +8,48 @@
  * - AiErrorReportingOutput - The return type for the reportAiError function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from "@/ai/genkit";
+import { z } from "genkit";
 
 const AiErrorReportingInputSchema = z.object({
-  query: z.string().describe('The user query that generated the incorrect response.'),
-  incorrectResponse: z.string().describe('The AI-generated response that was incorrect.'),
-  documentId: z.string().optional().describe('The ID of the document related to the response, if applicable.'),
-  feedback: z.string().describe('User feedback on why the response was incorrect.'),
+  query: z
+    .string()
+    .describe("The user query that generated the incorrect response."),
+  incorrectResponse: z
+    .string()
+    .describe("The AI-generated response that was incorrect."),
+  documentId: z
+    .string()
+    .optional()
+    .describe("The ID of the document related to the response, if applicable."),
+  feedback: z
+    .string()
+    .describe("User feedback on why the response was incorrect."),
 });
 export type AiErrorReportingInput = z.infer<typeof AiErrorReportingInputSchema>;
 
 const AiErrorReportingOutputSchema = z.object({
-  success: z.boolean().describe('Whether the error report was successfully recorded.'),
-  message: z.string().describe('A message indicating the status of the report.'),
+  success: z
+    .boolean()
+    .describe("Whether the error report was successfully recorded."),
+  message: z
+    .string()
+    .describe("A message indicating the status of the report."),
 });
-export type AiErrorReportingOutput = z.infer<typeof AiErrorReportingOutputSchema>;
+export type AiErrorReportingOutput = z.infer<
+  typeof AiErrorReportingOutputSchema
+>;
 
-export async function reportAiError(input: AiErrorReportingInput): Promise<AiErrorReportingOutput> {
+export async function reportAiError(
+  input: AiErrorReportingInput
+): Promise<AiErrorReportingOutput> {
   return reportAiErrorFlow(input);
 }
 
 const reportAiErrorPrompt = ai.definePrompt({
-  name: 'reportAiErrorPrompt',
-  input: {schema: AiErrorReportingInputSchema},
-  output: {schema: AiErrorReportingOutputSchema},
+  name: "reportAiErrorPrompt",
+  input: { schema: AiErrorReportingInputSchema },
+  output: { schema: AiErrorReportingOutputSchema },
   prompt: `You are an AI error reporting system.  A user has reported an incorrect response from an AI.
   Record the following information for analysis and improvement of the AI model.
 
@@ -46,21 +63,21 @@ const reportAiErrorPrompt = ai.definePrompt({
 
 const reportAiErrorFlow = ai.defineFlow(
   {
-    name: 'reportAiErrorFlow',
+    name: "reportAiErrorFlow",
     inputSchema: AiErrorReportingInputSchema,
     outputSchema: AiErrorReportingOutputSchema,
   },
-  async input => {
+  async (input) => {
     try {
-      const {output} = await reportAiErrorPrompt(input);
+      const { output } = await reportAiErrorPrompt(input);
       // Simulate saving the error report to a database or logging system here.
-      console.log('AI Error Report:', input);
+      console.log("AI Error Report:", input);
       return {
         success: true,
-        message: 'Error report recorded successfully.',
+        message: "Error report recorded successfully.",
       };
     } catch (error: any) {
-      console.error('Error recording AI error report:', error);
+      console.error("Error recording AI error report:", error);
       return {
         success: false,
         message: `Failed to record error report: ${error.message}`,

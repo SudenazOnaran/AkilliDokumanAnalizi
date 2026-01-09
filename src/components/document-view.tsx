@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type { Document } from '@/lib/data';
-import { useState } from 'react';
+import type { Document } from "@prisma/client";
+import { useState } from "react";
 import {
   Book,
   FileText,
@@ -9,7 +9,7 @@ import {
   Search,
   Sparkles,
   ThumbsDown,
-} from 'lucide-react';
+} from "lucide-react";
 
 import {
   Card,
@@ -17,11 +17,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -29,13 +29,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { summarizeDocument } from '@/ai/flows/document-summarization';
-import { semanticQuestionAnswering } from '@/ai/flows/semantic-question-answering';
-import { reportAiError } from '@/ai/flows/ai-error-reporting';
-import { Separator } from './ui/separator';
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { summarizeDocument } from "@/ai/flows/document-summarization";
+import { semanticQuestionAnswering } from "@/ai/flows/semantic-question-answering";
+import { reportAiError } from "@/ai/flows/ai-error-reporting";
+import { Separator } from "./ui/separator";
 
 type QnaResult = {
   answer: string;
@@ -46,17 +46,17 @@ type QnaResult = {
 
 export default function DocumentView({ document }: { document: Document }) {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [question, setQuestion] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [question, setQuestion] = useState("");
   const [qnaLoading, setQnaLoading] = useState(false);
   const [qnaResult, setQnaResult] = useState<QnaResult | null>(null);
 
   const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryResult, setSummaryResult] = useState('');
+  const [summaryResult, setSummaryResult] = useState("");
   const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
 
   const [errorReportDialogOpen, setErrorReportDialogOpen] = useState(false);
-  const [feedback, setFeedback] = useState('');
+  const [feedback, setFeedback] = useState("");
 
   const handleKeywordSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -66,7 +66,7 @@ export default function DocumentView({ document }: { document: Document }) {
     if (!highlight.trim()) {
       return <span>{text}</span>;
     }
-    const regex = new RegExp(`(${highlight})`, 'gi');
+    const regex = new RegExp(`(${highlight})`, "gi");
     const parts = text.split(regex);
     return (
       <span>
@@ -91,8 +91,8 @@ export default function DocumentView({ document }: { document: Document }) {
 
     // Hardcoded scenario for AI error reporting
     if (
-      document.id === 'doc3' &&
-      question.toLowerCase().includes('yazarı kimdir')
+      document.title.includes("Yapay Zeka Etiği") && // A more robust check
+      question.toLowerCase().includes("yazarı kimdir")
     ) {
       setTimeout(() => {
         setQnaResult({
@@ -116,18 +116,18 @@ export default function DocumentView({ document }: { document: Document }) {
     } catch (error) {
       console.error(error);
       toast({
-        title: 'Hata',
-        description: 'Soru cevaplanırken bir hata oluştu.',
-        variant: 'destructive',
+        title: "Hata",
+        description: "Soru cevaplanırken bir hata oluştu.",
+        variant: "destructive",
       });
     } finally {
       setQnaLoading(false);
     }
   };
-  
+
   const handleSummarize = async (detailed: boolean) => {
     setSummaryLoading(true);
-    setSummaryResult('');
+    setSummaryResult("");
     setSummaryDialogOpen(true);
     try {
       const result = await summarizeDocument({
@@ -137,7 +137,7 @@ export default function DocumentView({ document }: { document: Document }) {
       setSummaryResult(result.summary);
     } catch (error) {
       console.error(error);
-      setSummaryResult('Özet oluşturulurken bir hata oluştu.');
+      setSummaryResult("Özet oluşturulurken bir hata oluştu.");
     } finally {
       setSummaryLoading(false);
     }
@@ -145,7 +145,7 @@ export default function DocumentView({ document }: { document: Document }) {
 
   const handleReportError = async () => {
     if (!feedback.trim() || !qnaResult) return;
-    
+
     try {
       await reportAiError({
         query: qnaResult.question,
@@ -154,18 +154,18 @@ export default function DocumentView({ document }: { document: Document }) {
         feedback: feedback,
       });
       toast({
-        title: 'Geri Bildirim Gönderildi',
-        description: 'Hatalı yanıtı bildirdiğiniz için teşekkür ederiz.',
+        title: "Geri Bildirim Gönderildi",
+        description: "Hatalı yanıtı bildirdiğiniz için teşekkür ederiz.",
       });
     } catch (error) {
-       toast({
-        title: 'Hata',
-        description: 'Geri bildirim gönderilirken bir hata oluştu.',
-        variant: 'destructive',
+      toast({
+        title: "Hata",
+        description: "Geri bildirim gönderilirken bir hata oluştu.",
+        variant: "destructive",
       });
     } finally {
       setErrorReportDialogOpen(false);
-      setFeedback('');
+      setFeedback("");
     }
   };
 
@@ -186,10 +186,18 @@ export default function DocumentView({ document }: { document: Document }) {
                 </CardDescription>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleSummarize(false)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSummarize(false)}
+                >
                   <Book className="mr-2 h-4 w-4" /> Kısa Özet
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleSummarize(true)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSummarize(true)}
+                >
                   <Book className="mr-2 h-4 w-4" /> Detaylı Özet
                 </Button>
               </div>
@@ -226,54 +234,92 @@ export default function DocumentView({ document }: { document: Document }) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col h-[calc(100%-88px)]">
-             <div className="space-y-2">
+            <div className="space-y-2">
               <Input
                 placeholder="Dokümana bir soru sor..."
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAskQuestion()}
+                onKeyDown={(e) => e.key === "Enter" && handleAskQuestion()}
               />
-              <Button onClick={handleAskQuestion} disabled={qnaLoading} className="w-full">
-                {qnaLoading ? 'Soruluyor...' : 'Sor'}
+              <Button
+                onClick={handleAskQuestion}
+                disabled={qnaLoading}
+                className="w-full"
+              >
+                {qnaLoading ? "Soruluyor..." : "Sor"}
               </Button>
             </div>
-            
-            <Separator className="my-4"/>
+
+            <Separator className="my-4" />
 
             <ScrollArea className="flex-1">
               <div className="space-y-4 pr-2">
                 {qnaLoading && (
-                   <div className="flex items-center justify-center p-8">
-                     <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                   </div>
+                  <div className="flex items-center justify-center p-8">
+                    <svg
+                      className="animate-spin h-8 w-8 text-primary"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </div>
                 )}
                 {qnaResult ? (
                   <div className="space-y-4">
-                    <p className="text-sm font-semibold text-muted-foreground">{qnaResult.question}</p>
+                    <p className="text-sm font-semibold text-muted-foreground">
+                      {qnaResult.question}
+                    </p>
                     <div className="p-4 bg-muted/50 rounded-lg text-sm">
                       {qnaResult.answer}
                     </div>
-                     <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center">
                       <div className="flex gap-2 items-center">
-                        <Badge variant="secondary">Kaynak: {qnaResult.sourceDocuments.join(', ')}</Badge>
-                        {qnaResult.isHardcoded && <Badge variant="destructive">Hatalı Cevap</Badge>}
+                        <Badge variant="secondary">
+                          Kaynak: {qnaResult.sourceDocuments.join(", ")}
+                        </Badge>
+                        {qnaResult.isHardcoded && (
+                          <Badge variant="destructive">Hatalı Cevap</Badge>
+                        )}
                       </div>
-                       <Button variant="ghost" size="icon" onClick={() => setErrorReportDialogOpen(true)}>
-                          <ThumbsDown className="h-4 w-4 text-muted-foreground hover:text-destructive"/>
-                       </Button>
-                     </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setErrorReportDialogOpen(true)}
+                      >
+                        <ThumbsDown className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   !qnaLoading && (
-                  <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-2">
-                    <Lightbulb className="h-8 w-8"/>
-                    <p className="text-sm">"Projenin bütçesi ne kadar?" gibi sorular sorabilirsiniz.</p>
-                     {document.id === 'doc3' && <p className="text-sm font-semibold">"Bu dokümanın yazarı kimdir?" diye sormayı deneyin.</p>}
-                  </div>
-                ))}
+                    <div className="text-center text-muted-foreground p-8 flex flex-col items-center justify-center gap-2">
+                      <Lightbulb className="h-8 w-8" />
+                      <p className="text-sm">
+                        "Projenin bütçesi ne kadar?" gibi sorular
+                        sorabilirsiniz.
+                      </p>
+                      {document.title.includes("Yapay Zeka Etiği") && (
+                        <p className="text-sm font-semibold">
+                          "Bu dokümanın yazarı kimdir?" diye sormayı deneyin.
+                        </p>
+                      )}
+                    </div>
+                  )
+                )}
               </div>
             </ScrollArea>
           </CardContent>
@@ -290,11 +336,27 @@ export default function DocumentView({ document }: { document: Document }) {
             <div className="p-4 bg-muted/50 rounded-lg">
               {summaryLoading ? (
                 <div className="flex items-center justify-center p-8">
-                   <svg className="animate-spin h-6 w-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span className="ml-2">Özet oluşturuluyor...</span>
+                  <svg
+                    className="animate-spin h-6 w-6 text-primary"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span className="ml-2">Özet oluşturuluyor...</span>
                 </div>
               ) : (
                 <p className="text-sm">{summaryResult}</p>
@@ -302,34 +364,54 @@ export default function DocumentView({ document }: { document: Document }) {
             </div>
           </ScrollArea>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setSummaryDialogOpen(false)}>Kapat</Button>
+            <Button
+              variant="secondary"
+              onClick={() => setSummaryDialogOpen(false)}
+            >
+              Kapat
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Error Report Dialog */}
-      <Dialog open={errorReportDialogOpen} onOpenChange={setErrorReportDialogOpen}>
+      <Dialog
+        open={errorReportDialogOpen}
+        onOpenChange={setErrorReportDialogOpen}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Hatalı Cevabı Bildir</DialogTitle>
             <DialogDescription>
-              Yapay zekanın yanıtını geliştirmemize yardımcı olduğunuz için teşekkür ederiz. Lütfen hatanın ne olduğunu kısaca açıklayın.
+              Yapay zekanın yanıtını geliştirmemize yardımcı olduğunuz için
+              teşekkür ederiz. Lütfen hatanın ne olduğunu kısaca açıklayın.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-sm font-medium text-foreground/80">Hatalı Yanıt:</p>
-                <p className="text-sm text-foreground/90 italic">"{qnaResult?.answer}"</p>
+              <p className="text-sm font-medium text-foreground/80">
+                Hatalı Yanıt:
+              </p>
+              <p className="text-sm text-foreground/90 italic">
+                "{qnaResult?.answer}"
+              </p>
             </div>
-            <Textarea 
+            <Textarea
               placeholder="Geri bildiriminiz..."
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
             />
           </div>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setErrorReportDialogOpen(false)}>İptal</Button>
-            <Button onClick={handleReportError} disabled={!feedback.trim()}>Gönder</Button>
+            <Button
+              variant="secondary"
+              onClick={() => setErrorReportDialogOpen(false)}
+            >
+              İptal
+            </Button>
+            <Button onClick={handleReportError} disabled={!feedback.trim()}>
+              Gönder
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

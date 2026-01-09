@@ -1,18 +1,44 @@
-'use client';
+"use client";
 
-import { useSearchParams, useRouter } from 'next/navigation';
-import { File, FileText } from 'lucide-react';
+import { useSearchParams, useRouter } from "next/navigation";
+import { FileText } from "lucide-react";
 import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-} from '@/components/ui/sidebar';
-import { documents } from '@/lib/data';
+} from "@/components/ui/sidebar";
+import { useEffect, useState } from "react";
+import { getDocuments } from "@/app/actions/documents";
+import { Skeleton } from "./ui/skeleton";
+
+type Document = {
+  id: string;
+  title: string;
+};
 
 export default function DocumentList() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeDocumentId = searchParams.get('doc');
+  const activeDocumentId = searchParams.get("doc");
+
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        setLoading(true);
+        const docs = await getDocuments();
+        setDocuments(docs);
+      } catch (error) {
+        console.error("Failed to fetch documents", error);
+        // Optionally, show a toast message here
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDocuments();
+  }, [searchParams]); // Refresh when new doc is uploaded and route changes
 
   const handleSelectDocument = (docId: string) => {
     router.push(`/dashboard?doc=${docId}`);
@@ -24,17 +50,27 @@ export default function DocumentList() {
         YÜKLENEN DOKÜMANLAR
       </p>
       <SidebarMenu>
-        {documents.map((doc) => (
-          <SidebarMenuItem key={doc.id}>
-            <SidebarMenuButton
-              onClick={() => handleSelectDocument(doc.id)}
-              isActive={activeDocumentId === doc.id}
-            >
-              {doc.type === 'pdf' ? <File /> : <FileText />}
-              <span>{doc.title}</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
+        {loading ? (
+          <>
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-full" />
+          </>
+        ) : documents.length > 0 ? (
+          documents.map((doc) => (
+            <SidebarMenuItem key={doc.id}>
+              <SidebarMenuButton
+                onClick={() => handleSelectDocument(doc.id)}
+                isActive={activeDocumentId === doc.id}
+              >
+                <FileText />
+                <span>{doc.title}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))
+        ) : (
+          <p className="px-2 text-sm text-muted-foreground">Hiç doküman yok.</p>
+        )}
       </SidebarMenu>
     </div>
   );
