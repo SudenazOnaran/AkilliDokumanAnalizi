@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import type { Document } from "@prisma/client";
 import { useState } from "react";
 import {
@@ -30,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getSummaries } from "@/app/actions/documents";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { summarizeDocument } from "@/ai/flows/document-summarization";
@@ -44,6 +46,13 @@ type QnaResult = {
   isHardcoded?: boolean;
 };
 
+type Summary = {
+  id: string;
+  type: "SHORT" | "LONG";
+  content: string;
+  createdAt: string;
+};
+
 export default function DocumentView({ document }: { document: Document }) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,8 +64,15 @@ export default function DocumentView({ document }: { document: Document }) {
   const [summaryResult, setSummaryResult] = useState("");
   const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
 
+  const [saved, setSaved] = useState(false);
+  const [summaries, setSummaries] = useState<any[]>([]);
+
   const [errorReportDialogOpen, setErrorReportDialogOpen] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState(""); 
+
+  useEffect(() => {
+      getSummaries(document.id).then(setSummaries);
+    }, [document.id]);
 
   const handleKeywordSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -131,9 +147,11 @@ export default function DocumentView({ document }: { document: Document }) {
     setSummaryDialogOpen(true);
     try {
       const result = await summarizeDocument({
+        documentId: document.id,
         documentText: document.content,
         detail: detailed,
       });
+      setSaved(true);
       setSummaryResult(result.summary);
     } catch (error) {
       console.error(error);
@@ -141,6 +159,8 @@ export default function DocumentView({ document }: { document: Document }) {
     } finally {
       setSummaryLoading(false);
     }
+    const data = await getSummaries(document.id);
+    setSummaries(data);
   };
 
   const handleReportError = async () => {
@@ -370,6 +390,12 @@ export default function DocumentView({ document }: { document: Document }) {
             >
               Kapat
             </Button>
+            <Button
+              onClick={() => setSaved(true)}
+              variant="default"
+            >
+              Kaydet
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -415,6 +441,44 @@ export default function DocumentView({ document }: { document: Document }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* SAVED SUMMARIES */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Kayıtlı Özetler</CardTitle>
+          <CardDescription>
+            Bu doküman için kaydedilmiş kısa ve detaylı özetler
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {summaries.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Henüz kaydedilmiş bir özet yok.
+            </p>
+          ) : (
+            summaries.map((s) => (
+              <div
+                key={s.id}
+                className="p-4 border rounded-lg bg-muted/30 space-y-2"
+              >
+                <Badge
+                  variant={s.type === "SHORT" ? "secondary" : "default"}
+                >
+                  {s.type === "SHORT" ? "Kısa Özet" : "Detaylı Özet"}
+                </Badge>
+
+                <p className="text-sm whitespace-pre-wrap">
+                  {s.content}
+                </p>
+
+                <p className="text-xs text-muted-foreground">
+                  {new Date(s.createdAt).toLocaleString("tr-TR")}
+                </p>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
     </main>
   );
 }

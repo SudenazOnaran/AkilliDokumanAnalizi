@@ -6,9 +6,10 @@ import { FileSearch } from "lucide-react";
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>; // Promise ekledik
 }) {
-  const docId = searchParams?.doc as string;
+  const resolvedParams = await searchParams; // await ile çözüyoruz
+  const docId = resolvedParams?.doc as string;
 
   let selectedDocument = null;
   if (docId) {

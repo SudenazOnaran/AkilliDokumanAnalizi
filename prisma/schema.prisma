@@ -12,4 +12,20 @@ model Document {
   title     String
   content   String
   createdAt DateTime @default(now())
+  summaries Summary[]
+}
+
+model Summary {
+  id         String   @id @default(uuid())
+  type       SummaryType
+  content    String
+  createdAt  DateTime @default(now())
+
+  document   Document @relation(fields: [documentId], references: [id])
+  documentId String
+}
+
+enum SummaryType {
+  SHORT
+  LONG
 }

@@ -10,8 +10,11 @@
 
 import { ai } from "@/ai/genkit";
 import { z } from "genkit";
+import { saveSummary } from "@/app/actions/documents";
 
+// INPUT
 const SummarizeDocumentInputSchema = z.object({
+  documentId: z.string().describe("The ID of the document."),
   documentText: z
     .string()
     .describe("The text content of the document to summarize."),
@@ -25,6 +28,7 @@ export type SummarizeDocumentInput = z.infer<
   typeof SummarizeDocumentInputSchema
 >;
 
+// OUTPUT
 const SummarizeDocumentOutputSchema = z.object({
   summary: z.string().describe("The summary of the document."),
 });
@@ -51,6 +55,7 @@ const prompt = ai.definePrompt({
   Detailed Summary Requested: {{#if detail}}Yes{{else}}No{{/if}}`,
 });
 
+// Flow: Üret → DB’ye Kaydet → Döndür
 const summarizeDocumentFlow = ai.defineFlow(
   {
     name: "summarizeDocumentFlow",
@@ -59,6 +64,14 @@ const summarizeDocumentFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
+
+    // DB'YE KAYIT
+    await saveSummary(
+      input.documentId,
+      input.detail ? "LONG" : "SHORT",
+      output!.summary
+    );
+
     return output!;
   }
 );

@@ -20,3 +20,25 @@ export async function getDocumentById(id: string): Promise<Document | null> {
     where: { id },
   });
 }
+
+export async function saveSummary(
+  documentId: string,
+  type: "SHORT" | "LONG",
+  content: string
+) {
+  return await prisma.summary.create({
+    data: {
+      documentId,
+      type,
+      content,
+    },
+  });
+}
+
+export async function getSummaries(documentId: string) {
+  return await prisma.summary.findMany({
+    where: { documentId },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
