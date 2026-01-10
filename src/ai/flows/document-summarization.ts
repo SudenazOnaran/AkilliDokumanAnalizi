@@ -64,14 +64,6 @@ const summarizeDocumentFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-
-    // DB'YE KAYIT
-    await saveSummary(
-      input.documentId,
-      input.detail ? "LONG" : "SHORT",
-      output!.summary
-    );
-
     return output!;
   }
 );

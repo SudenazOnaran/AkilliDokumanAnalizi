@@ -42,3 +42,34 @@ export async function getSummaries(documentId: string) {
   });
 }
 
+export async function deleteSummary(summaryId: string) {
+  return await prisma.summary.delete({
+    where: { id: summaryId },
+  });
+}
+
+export async function saveChatHistory({
+  documentId,
+  question,
+  answer,
+}: {
+  documentId: string;
+  question: string;
+  answer: string;
+}) {
+  return prisma.chatHistory.create({
+    data: {
+      documentId,
+      question,
+      answer,
+    },
+  });
+}
+
+export async function getChatHistory(documentId: string) {
+  return prisma.chatHistory.findMany({
+    where: { documentId },
+    orderBy: { createdAt: "desc" },
+  });
+}
+

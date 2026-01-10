@@ -31,7 +31,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getSummaries } from "@/app/actions/documents";
+import { getSummaries, saveSummary, deleteSummary } from "@/app/actions/documents";
+import { saveChatHistory, getChatHistory } from "@/app/actions/documents";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { summarizeDocument } from "@/ai/flows/document-summarization";
@@ -64,11 +65,18 @@ export default function DocumentView({ document }: { document: Document }) {
   const [summaryResult, setSummaryResult] = useState("");
   const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
 
+  const [chatHistory, setChatHistory] = useState<any[]>([]);
+
   const [saved, setSaved] = useState(false);
-  const [summaries, setSummaries] = useState<any[]>([]);
+  const [summaryType, setSummaryType] = useState<"SHORT" | "LONG">("SHORT");
+  const [summaries, setSummaries] = useState<Summary[]>([]);
 
   const [errorReportDialogOpen, setErrorReportDialogOpen] = useState(false);
   const [feedback, setFeedback] = useState(""); 
+
+  useEffect(() => {
+    getChatHistory(document.id).then(setChatHistory);
+  }, [document.id]);
 
   useEffect(() => {
       getSummaries(document.id).then(setSummaries);
@@ -104,6 +112,19 @@ export default function DocumentView({ document }: { document: Document }) {
 
     setQnaLoading(true);
     setQnaResult(null);
+
+    const result = await semanticQuestionAnswering({
+      documentText: document.content,
+      question: question,
+    });
+
+    setQnaResult({ ...result, question: question });
+
+    await saveChatHistory({
+      documentId: document.id,
+      question: question,
+      answer: result.answer,
+    });
 
     // Hardcoded scenario for AI error reporting
     if (
@@ -151,16 +172,28 @@ export default function DocumentView({ document }: { document: Document }) {
         documentText: document.content,
         detail: detailed,
       });
-      setSaved(true);
+
       setSummaryResult(result.summary);
+      setSummaryType(detailed ? "LONG" : "SHORT");
+
     } catch (error) {
       console.error(error);
       setSummaryResult("Özet oluşturulurken bir hata oluştu.");
     } finally {
       setSummaryLoading(false);
     }
+  };
+
+  const handleDeleteSummary = async (id: string) => {
+    await deleteSummary(id);
+
     const data = await getSummaries(document.id);
     setSummaries(data);
+
+    toast({
+      title: "Silindi",
+      description: "Özet başarıyla silindi.",
+    });
   };
 
   const handleReportError = async () => {
@@ -342,6 +375,23 @@ export default function DocumentView({ document }: { document: Document }) {
                 )}
               </div>
             </ScrollArea>
+
+            <h3 className="text-sm font-semibold">Önceki Sorular</h3>
+
+            <div className="space-y-3">
+              {chatHistory.map((chat) => (
+                <div
+                  key={chat.id}
+                  className="p-3 border rounded-lg bg-muted/30 text-sm space-y-1"
+                >
+                  <p className="font-medium">❓ {chat.question}</p>
+                  <p className="text-muted-foreground">✨ {chat.answer}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(chat.createdAt).toLocaleString("tr-TR")}
+                  </p>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -391,8 +441,19 @@ export default function DocumentView({ document }: { document: Document }) {
               Kapat
             </Button>
             <Button
-              onClick={() => setSaved(true)}
-              variant="default"
+              onClick={async () => {
+                await saveSummary(document.id, summaryType, summaryResult);
+
+                const data = await getSummaries(document.id);
+                setSummaries(data);
+
+                toast({
+                  title: "Kaydedildi",
+                  description: "Özet başarıyla veritabanına kaydedildi.",
+                });
+
+                setSummaryDialogOpen(false);
+              }}
             >
               Kaydet
             </Button>
@@ -459,8 +520,17 @@ export default function DocumentView({ document }: { document: Document }) {
             summaries.map((s) => (
               <div
                 key={s.id}
-                className="p-4 border rounded-lg bg-muted/30 space-y-2"
+                className="relative p-4 border rounded-lg bg-muted/30 space-y-2"
               >
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={() => handleDeleteSummary(s.id)}
+                >
+                  Sil
+                </Button>
+
                 <Badge
                   variant={s.type === "SHORT" ? "secondary" : "default"}
                 >
