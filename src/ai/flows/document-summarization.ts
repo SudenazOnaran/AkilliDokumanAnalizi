@@ -46,13 +46,18 @@ const prompt = ai.definePrompt({
   name: "summarizeDocumentPrompt",
   input: { schema: SummarizeDocumentInputSchema },
   output: { schema: SummarizeDocumentOutputSchema },
-  prompt: `You are an expert summarizer, able to create concise and informative summaries of documents.
+  prompt: `Sen uzman bir özetleme asistanısın.  
+  Görevin, verilen dokümanı açık, anlaşılır ve bilgilendirici şekilde özetlemektir.
 
-  Summarize the following document text. If the user has requested a detailed summary, provide a more comprehensive summary.
+  Eğer kullanıcı detaylı özet istemişse, daha kapsamlı bir özet oluştur.
 
-  Document Text: {{{documentText}}}
+  Doküman Metni:
+  {{{documentText}}}
 
-  Detailed Summary Requested: {{#if detail}}Yes{{else}}No{{/if}}`,
+  Detaylı Özet İstendi mi?
+  {{#if detail}}Evet{{else}}Hayır{{/if}}
+
+  Lütfen tüm yanıtları TÜRKÇE olarak üret.`,
 });
 
 // Flow: Üret → DB’ye Kaydet → Döndür
