@@ -43,13 +43,14 @@ const prompt = ai.definePrompt({
   name: "semanticQuestionAnsweringPrompt",
   input: { schema: SemanticQuestionAnsweringInputSchema },
   output: { schema: SemanticQuestionAnsweringOutputSchema },
-  prompt: `You are an expert in answering questions based on document content. Use the provided document text to answer the question.
-  Cite the source documents used to generate the answer.
+  prompt: `Sen, verilen doküman içeriğine dayanarak soruları yanıtlayan bir uzmansın.
+  Sorunun cevabını yalnızca sağlanan doküman metnine göre oluştur.
+  Cevabı üretirken kullandığın kaynak dokümanları da belirt.
 
-  Document Text:
+  Doküman Metni:
   {{documentText}}
 
-  Question: {{question}}
+  Soru: {{question}}
   `,
 });
 

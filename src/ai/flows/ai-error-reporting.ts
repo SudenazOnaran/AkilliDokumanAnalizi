@@ -50,15 +50,16 @@ const reportAiErrorPrompt = ai.definePrompt({
   name: "reportAiErrorPrompt",
   input: { schema: AiErrorReportingInputSchema },
   output: { schema: AiErrorReportingOutputSchema },
-  prompt: `You are an AI error reporting system.  A user has reported an incorrect response from an AI.
-  Record the following information for analysis and improvement of the AI model.
+  prompt: `Sen bir yapay zeka hata raporlama sistemisin.
+  Bir kullanıcı, yapay zekanın verdiği yanlış bir cevabı bildirdi.
+  Aşağıdaki bilgileri, modelin analiz edilmesi ve geliştirilmesi amacıyla kaydet.
 
-  User Query: {{{query}}}
-  Incorrect Response: {{{incorrectResponse}}}
-  Document ID: {{{documentId}}}
-  User Feedback: {{{feedback}}}
+  Kullanıcı Sorusu: {{{query}}}
+  Yanlış Cevap: {{{incorrectResponse}}}
+  Doküman ID: {{{documentId}}}
+  Kullanıcı Geri Bildirimi: {{{feedback}}}
 
-  Return a success status and a message confirming that the error has been recorded.`,
+  Hata raporunun başarıyla kaydedildiğini belirten bir durum ve mesaj döndür.`,
 });
 
 const reportAiErrorFlow = ai.defineFlow(
